@@ -110,14 +110,10 @@ utilizando los componentes requeridos.
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "arriendosApp",
-    "rest_framework",
 ]
-NOTA: Tambien agregamos 'rest_framework' para el manejo de las API 
 
-
-
-#Entramos a la carpeta hito1
-cd hito1
+#Entramos a la carpeta hitos
+cd hitos
 
 #Activamos el entorno virtual "entorno_hito"
     source entorno_hito/bin/activate
