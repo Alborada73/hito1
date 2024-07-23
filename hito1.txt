@@ -1,0 +1,547 @@
+Una empresa dedicada al arriendo de inmuebles 
+requiere de su ayuda para crear un sitio web 
+donde usuarios puedan revisar viviendas disponibles para el arriendo. 
+Para esto, la empresa necesita realizar un diseño de su base de datos
+que permita almacenar toda su información.
+
+Requerimientos
+
+1. Instalación de desarrollo, 
+para esto el ambiente de desarrollo debe contar con las siguientes características:
+    
+    a. Una instalación de PostgreSQL (link)
+
+    # Para saber si tengo instalado el sql, voy a la terminal y escribo en mi caso:
+    /Library/PostgreSQL/15/scripts/runpsql.sh
+
+    (base) yasnaangulo@MacBook-Air-de-Yasna M7_DJANGO_ORM %  /Library/PostgreSQL/15/scripts/runpsql.sh
+    Server [localhost]: 
+    Database [postgres]: 
+    Port [5432]: 
+    Username [postgres]: 
+    Password for user postgres: 
+    psql (15.3)
+    Type "help" for help.
+    postgres=# 
+
+    #SALGO DE PostgreSQL
+    postgres=# \q
+
+
+    b. Creación de un ambiente virtual de Python.
+    # Trabajaré dentro de la carpeta "hito1"
+    cd hito1
+
+    #Crear entorno virtual de nombre entorno_hito
+    python3 -m venv entorno_hito
+
+    #Activar mi entorno virtual de nombre entorno_hito
+    source entorno_hito/bin/activate
+
+
+
+    c. Instalación de los paquetes necesarios 
+    para la creación de un proyecto de Django (dependencias)
+    
+    #verificamos la version de python
+    python3 -V 
+    Python 3.12.2
+
+    #Ahora instalamos django
+    pip3 install django    
+
+    #comprobamos la actualizacion
+    pip3 list 
+    
+    
+    #En caso que pip requiera actualizacion
+    pip install --upgrade pip
+
+    #aprovechamos de instalar los controladores en el entorno virtual (zsh)
+    pip3 install psycopg2-binary
+
+    (entorno_hito) (base) yasnaangulo@MacBook-Air-de-Yasna hito1 % pip3 list                   
+    Package         Version
+    --------------- -------
+    asgiref         3.8.1
+    Django          5.0.7
+    pip             24.1.2
+    psycopg2-binary 2.9.9
+    sqlparse        0.5.0
+
+------------------CREACION PROYECTO--------------------------
+    #creacion de un proyecto de nombre arriendo_inmuebles
+    django-admin startproject arriendo_inmuebles
+    
+    #Accedo a la carpeta de proyecto arriendo_inmuebles
+    cd arriendo_inmuebles
+    
+    
+    d. Una aplicación de Django.
+
+    #creacion de una aplicacion de nombre arriendosApp en el proyecto arriendo_inmuebles
+    #accedemos al proyecto con el siguiente comando:
+    cd arriendo_inmuebles
+
+    #Si necesitamos iniciar el servidor de desarrollo
+    para ver la pagina web:
+    python3 manage.py runserver
+
+    System check identified no issues (0 silenced).
+    July 20, 2024 - 01:32:45
+    Django version 5.0.7, using settings 'arriendo_inmuebles.settings'
+    Starting development server at http://127.0.0.1:8000/
+    Quit the server with CONTROL-C.
+
+
+
+    #creamos la aplicacion arriendosApp
+    python3 manage.py startapp arriendosApp
+
+Configurar una aplicación Django para su conexión a una base de datos PostgreSql
+utilizando los componentes requeridos.
+
+#Agregamos arriendosApp a las aplicaciones instaladas en django
+    INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "arriendosApp",
+    "rest_framework",
+]
+NOTA: Tambien agregamos 'rest_framework' para el manejo de las API 
+
+
+
+#Entramos a la carpeta hito1
+cd hito1
+
+#Activamos el entorno virtual "entorno_hito"
+    source entorno_hito/bin/activate
+
+------------------------------------ORM-------------------------------------
+
+#creamos una Base de Datos en una nueva terminal, en mi caso en la "bash" 
+    #Entramos a postgresql
+    /Library/PostgreSQL/15/scripts/runpsql.sh
+
+    (entorno_hito) (base) MacBook-Air-de-Yasna:hito1 yasnaangulo$ /Library/PostgreSQL/15/scripts/runpsql.sh
+    Server [localhost]: 
+    Database [postgres]: 
+    Port [5432]: 
+    Username [postgres]: 
+    Password for user postgres: 
+    psql (15.3)
+    Type "help" for help.
+
+    postgres=# 
+
+    #Creamos una base de datos de nombre "bd_arriendos"
+    create database bd_arriendos;
+
+    #Comprobamos la creacion de la base de datos "bd_arriendos"
+    \l 
+    Entramos a la base de datos "bd_arriendos"
+    \c bd_arriendos
+     bd_arriendos              | postgres | UTF8     | C       | C     |            | 
+
+    #Reemplazamos la DATABASE con nuestros datos 
+
+    DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "bd_arriendos",
+        "USER": "postgres",
+        "PASSWORD": "yangulo",
+        "HOST": "127.0.0.1",
+        "PORT": "5432",
+    }
+}
+
+    #Ya instalamos los driver de la base de datos
+    en nuestro entorno virtual
+    pip3 install psycopg2-binary
+
+    #reviso la instalacion del driver
+    pip3 list
+
+    #para ir a mi base de datos bd_arriendos
+    \c bd_arriendos
+    You are now connected to database "bd_arriendos" as user "postgres".
+    bd_arriendos=# 
+
+    #para revisar en mi base de datos bd_arriendos en postgres
+    #si tengo tablas creadas, el comando es:
+    \d
+    Did not find any relations.
+    bd_arriendos=# 
+
+-----------------MODELOS-----------------------------------------
+2. Definición de modelo de datos para representación del problema
+utilizando el framework Django:
+
+Para limpiar la termial es con el comando: clear
+
+#1ero ejecutar:
+#el comando que crea las tablas por defecto en postgres es:
+python3 manage.py makemigrations
+
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, sessions
+
+python3 manage.py migrate
+Applying sessions.0001_initial... OK
+
+
+#2do Incertar/crear un superusuario 
+¿para qué lo creamos? Para trabajar en la parte de administracion
+python3 manage.py createsuperuser
+
+Username (leave blank to use 'yasnaangulo'): 
+Email address: yasna@yasna.cl
+Password: yangulo
+Password (again): yangulo
+Superuser created successfully.
+
+#En la web escribo: http://127.0.0.1:8000/admin/
+# y entro con los datos con los que cree el superusuario
+
+Username: yasnaangulo
+Password: yangulo
+
+
+
+CREAR EL MODELO en model.py
+    a. Representación del modelo relacional de datos.
+    b. Conexión a la base de datos
+    c. Definición y manejo de llaves primarias en columnas foráneas
+
+
+from django.db import models
+from django.contrib.auth.models import User 
+
+# Create your models here.
+class Tipo_usuario(models.Model):
+    nombre = models.CharField(max_length=20)
+    def __str__(self):
+        return f"{self.id} {self.nombre}"
+    
+    
+class Usuario(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=False)
+    rut = models.CharField(max_length=10, primary_key=True)
+    nombres = models.CharField(max_length=50, null=False, blank=False)
+    apellidos = models.CharField(max_length=50, null=False, blank=False)
+    direccion = models.CharField(max_length=50, null=False, blank=False)
+    telefono = models.CharField(max_length=50, null=False, blank=False)
+    correo = models.CharField(max_length=50, null=False, blank=False)
+    tipo_usuario = models.ForeignKey(Tipo_usuario, on_delete=models.CASCADE, null=False)
+    def __str__(self):
+        return f"{self.rut}"
+  
+
+class Tipo_inmueble(models.Model):
+    nombre = models.CharField(max_length=50)
+    def __str__(self):
+        return f"{self.nombre}"
+    
+
+class Region(models.Model):
+    nombre = models.CharField(max_length=50)
+    def __str__(self):
+        return self.nombre
+  
+
+class Comuna(models.Model):
+    nombre = models.CharField(max_length=40)
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, null=False)
+    def __str__(self):
+        return self.nombre
+    
+
+class Inmueble(models.Model):
+    nombre = models.CharField(max_length=50, null=False, blank=False)
+    descripcion = models.TextField()
+    m2_construidos = models.FloatField(null=False)
+    m2_terreno = models.FloatField(null=False)
+    num_estacionamientos = models.IntegerField(default=0)
+    num_habitaciones = models.IntegerField(default=0)
+    num_banios = models.IntegerField(default=0)
+    direccion = models.CharField(max_length=50, null=False, blank=False)
+    precio_mensual = models.FloatField(null=False)
+    comuna = models.ForeignKey(Comuna, on_delete=models.CASCADE, null=False)
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, null=False)
+    tipo_inmueble = models.ForeignKey(Tipo_inmueble, on_delete=models.CASCADE, null=False)
+    def __str__(self):
+        return f"{self.nombre}"
+   
+
+    #Ahora se toma cada uno de estos modelos y se llevan
+    a nuestra aplicacion de "admin.py" para dejarlos registrados
+
+    from django.contrib import admin
+    from .models import Tipo_usuario, Usuario, Tipo_inmueble, Region, Comuna, Inmueble
+
+    # Register your models here.
+    admin.site.register(Tipo_usuario)
+    admin.site.register(Usuario)
+    admin.site.register(Tipo_inmueble)
+    admin.site.register(Region)
+    admin.site.register(Comuna)
+    admin.site.register(Inmueble)
+
+
+    #Se agrega arriba en "models.py" lo siguiente:
+    from django.contrib.auth.models import User 
+
+    #No olvidar crear el archivo "services.py" dentro de "arriendosApp" 
+
+    #Ejecutar nuevamente
+    python3 manage.py makemigrations
+    python3 manage.py migrate
+
+(entorno_hito) (base) yasnaangulo@MacBook-Air-de-Yasna arriendo_inmuebles % python3 manage.py makemigrations
+Migrations for 'arriendosApp':
+  arriendosApp/migrations/0001_initial.py
+    - Create model Region
+    - Create model Tipo_inmueble
+    - Create model Tipo_usuario
+    - Create model Comuna
+    - Create model Usuario
+    - Create model Inmueble
+
+
+Operations to perform:
+  Apply all migrations: admin, arriendosApp, auth, contenttypes, sessions
+Running migrations:
+  Applying arriendosApp.0001_initial... OK
+
+#Aquí se ejecutaron todas las tablas 
+y vamos a revisar a postgresql:
+
+postgres=# \c bd_arriendos
+You are now connected to database "bd_arriendos" as user "postgres".
+bd_arriendos=# \d
+
+                        List of relations
+ Schema |               Name                |   Type   |  Owner   
+--------+-----------------------------------+----------+----------
+public | arriendosApp_comuna               | table    | postgres
+ public | arriendosApp_comuna_id_seq        | sequence | postgres
+ public | arriendosApp_inmueble             | table    | postgres
+ public | arriendosApp_inmueble_id_seq      | sequence | postgres
+ public | arriendosApp_region               | table    | postgres
+ public | arriendosApp_region_id_seq        | sequence | postgres
+ public | arriendosApp_tipo_inmueble        | table    | postgres
+ public | arriendosApp_tipo_inmueble_id_seq | sequence | postgres
+ public | arriendosApp_tipo_usuario         | table    | postgres
+ public | arriendosApp_tipo_usuario_id_seq  | sequence | postgres
+ public | arriendosApp_usuario              | table    | postgres
+ public | auth_group                        | table    | postgres
+ public | auth_group_id_seq                 | sequence | postgres
+ public | auth_group_permissions            | table    | postgres
+ public | auth_group_permissions_id_seq     | sequence | postgres
+ public | auth_permission                   | table    | postgres
+ public | auth_permission_id_seq            | sequence | postgres
+ public | auth_user                         | table    | postgres
+ public | auth_user_groups                  | table    | postgres
+ public | auth_user_groups_id_seq           | sequence | postgres
+ public | auth_user_id_seq                  | sequence | postgres
+ public | auth_user_user_permissions        | table    | postgres
+ public | auth_user_user_permissions_id_seq | sequence | postgres
+ public | django_admin_log                  | table    | postgres
+ public | django_admin_log_id_seq           | sequence | postgres
+ public | django_content_type               | table    | postgres
+ public | django_content_type_id_seq        | sequence | postgres
+ public | django_migrations                 | table    | postgres
+ public | django_migrations_id_seq          | sequence | postgres
+ public | django_session                    | table    | postgres
+(30 rows)
+
+#Se aplicó nuevamente la migracion porque modificamos los modelos:
+
+(entorno_hito) (base) yasnaangulo@MacBook-Air-de-Yasna arriendo_inmuebles % python3 manage.py makemigrations
+Migrations for 'arriendosApp':
+  arriendosApp/migrations/0002_remove_inmueble_arrendada_remove_inmueble_arrendador_and_more.py
+    - Remove field arrendada from inmueble
+    - Remove field arrendador from inmueble
+    - Remove field arrendatario from inmueble
+    - Alter field nombre on region
+
+
+(entorno_hito) (base) yasnaangulo@MacBook-Air-de-Yasna arriendo_inmuebles %  python3 manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, arriendosApp, auth, contenttypes, sessions
+Running migrations:
+  Applying arriendosApp.0002_remove_inmueble_arrendada_remove_inmueble_arrendador_and_more... OK
+
+
+bd_arriendos=# \d
+                        List of relations
+ Schema |               Name                |   Type   |  Owner   
+--------+-----------------------------------+----------+----------
+ public | arriendosApp_comuna               | table    | postgres
+ public | arriendosApp_comuna_id_seq        | sequence | postgres
+ public | arriendosApp_inmueble             | table    | postgres
+ public | arriendosApp_inmueble_id_seq      | sequence | postgres
+ public | arriendosApp_region               | table    | postgres
+ public | arriendosApp_region_id_seq        | sequence | postgres
+ public | arriendosApp_tipo_inmueble        | table    | postgres
+ public | arriendosApp_tipo_inmueble_id_seq | sequence | postgres
+ public | arriendosApp_tipo_usuario         | table    | postgres
+ public | arriendosApp_tipo_usuario_id_seq  | sequence | postgres
+ public | arriendosApp_usuario              | table    | postgres
+ public | auth_group                        | table    | postgres
+ public | auth_group_id_seq                 | sequence | postgres
+ public | auth_group_permissions            | table    | postgres
+ public | auth_group_permissions_id_seq     | sequence | postgres
+ public | auth_permission                   | table    | postgres
+ public | auth_permission_id_seq            | sequence | postgres
+ public | auth_user                         | table    | postgres
+ public | auth_user_groups                  | table    | postgres
+ public | auth_user_groups_id_seq           | sequence | postgres
+ public | auth_user_id_seq                  | sequence | postgres
+ public | auth_user_user_permissions        | table    | postgres
+ public | auth_user_user_permissions_id_seq | sequence | postgres
+ public | django_admin_log                  | table    | postgres
+ public | django_admin_log_id_seq           | sequence | postgres
+ public | django_content_type               | table    | postgres
+ public | django_content_type_id_seq        | sequence | postgres
+ public | django_migrations                 | table    | postgres
+ public | django_migrations_id_seq          | sequence | postgres
+ public | django_session                    | table    | postgres
+(30 rows)
+
+
+
+
+
+------------------SERVICIOS---------------------------------------------
+  Un usuario tipo arrendatario debe
+      - poder listar las propiedades de diversos inmuebles  
+        de una comuna especifica
+      - generar una solicitud de arriendo de la misma
+
+3. Implementar operaciones en los modelos para la manipulación de datos
+utilizando el framework Django: (CRUD)(agregar templates y estilo)
+
+    a. Crear un objeto con el modelo.
+    b. Enlistar desde el modelo de datos.
+    c. Actualizar un registro en el modelo de datos.
+    d. Borrar un registro del modelo de datos utilizando un modelo Django.
+
+
+#Lo 1ero que tenemos que hacer en el services es
+obtener un metodo que  obtenga todos los inmuebles e importamos los modelos 
+
+from .models import Tipo_usuario, Usuario, Tipo_inmueble, Region, Comuna, Inmueble
+
+def get_all_inmuebles():
+    lista_inmuebles = Inmueble.objects.all()
+    return lista_inmuebles
+
+
+
+ a. Crear un objeto con el modelo
+
+ def save_inmueble():
+
+
+-----------------CREACION DE VISTAS Y URLs----------------------------
+Crea vistas para el registro y la actualización de usuarios:
+
+
+
+
+
+
+-------------------------TEMPLATES----------------------------------------
+
+#crear carpeta templates en la app: OK
+#crear las html, con estructura basica: OK
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  </head>
+  <body>
+    <h1>Página Índex</h1>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  </body>
+</html>
+
+#crear metodo que despliega el html
+
+#crear ruta que enlaza a views.py de la app 
+
+
+
+
+
+
+
+
+    -------------ANTECEDENTES PARA HACER EL PROYECTO-----------------------
+    - Creacion sitio web con arriendos disponibles
+    _ los usuarios podrán revisar: arriendos disponibles 
+    separados por comuna y region
+    - el sitio tendrá 2 tipos de usuarios:
+    
+    arrendatarios:
+
+    
+    arrendadores:
+    - estos podrán hacer operaciones diferenciadas dentro del sitio
+    
+    Requerimientos del proyecto
+    1. Un nuevo usuario se debe registrar en la aplicacion,
+    actualizar sus datos y e identificarse como arrendatario 
+    o como arrendador.
+    2. Un usuario debe tener las siguientes características:
+        nombres
+        apellidos
+        rut
+        direccion
+        telefono personal
+        correo electronico
+        tipo de usuario
+
+      Un usuario tipo arrendatario debe
+      - poder listar las propiedades de diversos inmuebles  
+        de una comuna especifica
+      - generar una solicitud de arriendo de la misma
+      
+      El inmueble debe tener las siguientes caracteristicas:
+      - nombre
+      - descripcion
+      - m2 construidos
+      - m2 totales o del terreno
+      - cantidad de estacionamientos
+      - cantidad de habitaciones
+      - cantidad de baños
+      - direccion
+      - comuna 
+      - tipo de inmueble; casa, dpto, parcela
+      - precio mensual del arriendo
+
+    Un usuario tipo arrendador debe:
+    - poder publicar sus propiedades en una comuna determinada
+    con sus caracteristicas 
+    - listar sus propiedades en el dashboard
+    (como va a visualizar cada usuario su pagina)
+    - eliminar y editar sus propiedades 
+    - cambiar el estado de sus propiedades:
+        disponible a no disponible
+    - aceptar arrendatarios
+
+      
+
+
+
